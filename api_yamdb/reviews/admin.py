@@ -20,7 +20,7 @@ class TitleAdmin(admin.ModelAdmin):
         'year',
         'rating',
         'description',
-        'category'
+        'category',
 
     )
 
@@ -30,7 +30,7 @@ class GenreAdmin(admin.ModelAdmin):
         "pk",
         "name",
         "slug",
-        "title"
+        
     )
 
     empty_value_display = "-пусто-"

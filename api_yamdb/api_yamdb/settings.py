@@ -22,10 +22,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'reviews.apps.ReviewsConfig',
-    # 'api.apps.ApiConfig', 
-    'api',
-    'reviews',
+    'django_filters',
+    'rest_framework',
+    'reviews.apps.ReviewsConfig',
+    'api.apps.ApiConfig',
+    # 'api',
+    # 'reviews',
 ]
 
 MIDDLEWARE = [
@@ -108,3 +110,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10,
+    # 'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+}
