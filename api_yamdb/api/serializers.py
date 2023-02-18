@@ -48,7 +48,6 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'username')
-from rest_framework import serializers
 
 
 class CategorySerializer(serializers.ModelSerializer):
