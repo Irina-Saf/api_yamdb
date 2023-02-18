@@ -12,8 +12,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import filters
 from rest_framework.pagination import LimitOffsetPagination
 
-from reviews.models import Category, Title, Genre, User
-from .serializers import (TitleSerializer, GenreSerializer, CategorySerializer)
+from reviews.models import Category, Title, Genre, User, Review, Comment
+from .serializers import (TitleSerializer, GenreSerializer, CategorySerializer, CommentSerializer, ReviewSerializer)
 from .filters import TitleFilter
 
 from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
@@ -121,3 +121,45 @@ class GenreViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        # Получаем id отзыва из эндпоинта
+        title_id = self.kwargs.get('title_id')
+        # И отбираем только нужные комментарии
+        new_queryset = Review.objects.filter(title=title_id)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, review=title)
+
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user)
+        super(ReviewViewSet, self).perform_update(serializer)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    # queryset во вьюсете не указываем
+    # Нам тут нужны не все комментарии,
+    # а только связанные с отзывом id=review_id
+    # Поэтому нужно переопределить метод get_queryset и применить фильтр
+
+    def get_queryset(self):
+        # Получаем id отзыва из эндпоинта
+        review_id = self.kwargs.get('review_id')
+        # И отбираем только нужные комментарии
+        new_queryset = Comment.objects.filter(review=review_id)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
+
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user)
+        super(CommentViewSet, self).perform_update(serializer)
