@@ -1,5 +1,4 @@
 import re
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
@@ -90,11 +89,11 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 # class TitleSerializer(serializers.ModelSerializer):
-   
+
 #     category = CategorySerializer(read_only=True)
 #     genre = GenreSerializer(slug_field='slug',
 #         queryset=Genre.objects.all(),
-#         read_only=True, 
+#         read_only=True,
 #         many=True)
 #     rating = serializers.IntegerField(
 #         required=False
@@ -109,7 +108,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleGETSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True,
-                             read_only=True)
+                            read_only=True)
     category = CategorySerializer(read_only=True)
     rating = serializers.IntegerField(read_only=True)
 
@@ -141,11 +140,11 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = (
-            'name', 
-            'year', 
+            'name',
+            'year',
             'rating',
-            'description', 
-            'genre', 
+            'description',
+            'genre',
             'category')
 
     def to_representation(self, title):
@@ -167,7 +166,6 @@ class CommentSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
 
-
     class Meta:
         validators = [
             UniqueTogetherValidator(
@@ -178,4 +176,3 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         model = Review
         fields = '__all__'
-

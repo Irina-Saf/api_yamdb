@@ -14,7 +14,6 @@ from rest_framework import filters
 from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Category, Title, Genre, User, Review, Comment
-from .serializers import (TitleSerializer, GenreSerializer, CategorySerializer, CommentSerializer, ReviewSerializer)
 from .filters import TitleFilter
 
 from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
@@ -132,6 +131,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
 
+
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
@@ -174,5 +174,3 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
         super(CommentViewSet, self).perform_update(serializer)
-
-
