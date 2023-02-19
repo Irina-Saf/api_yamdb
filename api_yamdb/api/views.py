@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
+# from django.contrib.auth.tokens import default_token_generator
+# from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -18,8 +19,9 @@ from .filters import TitleFilter
 
 from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
                           IsAdminOrReadOnly)
-from .serializers import (GetTokenSerializer, NotAdminSerializer,
-                          SignUpSerializer, UserSerializer)
+from .serializers import (GetTokenSerializer, SignUpSerializer, UserSerializer,
+                          TitleSerializer, GenreSerializer, CategorySerializer,
+                          CommentSerializer, ReviewSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -29,7 +31,6 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
-    http_method_names = ('GET', 'POST', 'DELETE', 'PATCH')
 
     @action(
         methods=['GET', 'PATCH'],
@@ -57,27 +58,33 @@ class UserViewSet(viewsets.ModelViewSet):
 class Signup(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    def send_email(data, username):
-        user = get_object_or_404(User, username=username)
-        confirmation_code = default_token_generator.make_token(user)
-        send_mail(
-            subject=f'Приветствуем вас, {user.username}.',
-            message=f'Ваш код подверждения {confirmation_code}',
-            from_email=None,
-            recipient_list=[user.email],
-            fail_silently=False
+    @staticmethod
+    def send_email(data):
+        email = EmailMessage(
+            subject=data['email_subject'],
+            body=data['email_body'],
+            to=[data['to_email']]
         )
+        email.send()
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        username = get_object_or_404(
-            User,
-            username=serializer.validated_data['username']
+        user = serializer.save()
+        email_body = (
+            f'Приветствуем вас, {user.username}.'
+            f'\nКВаш код подверждения : {user.confirmation_code}'
         )
-        self.confirmation_code(username)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = {
+            'email_body': email_body,
+            'to_email': user.email,
+            'email_subject': 'Ваш код подверждения!'
+        }
+        if serializer.is_valid():
+            serializer.save()
+            self.send_email(data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetToken(APIView):
@@ -102,6 +109,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
@@ -110,6 +118,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
     pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
 
@@ -118,6 +127,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     serializer_class = GenreSerializer
     queryset = Genre.objects.all()
     pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
     lookup_field = 'slug'
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
@@ -144,6 +154,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
     # queryset во вьюсете не указываем
     # Нам тут нужны не все комментарии,
     # а только связанные с отзывом id=review_id
@@ -163,3 +174,5 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
         super(CommentViewSet, self).perform_update(serializer)
+
+

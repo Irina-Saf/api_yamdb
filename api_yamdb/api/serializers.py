@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -6,9 +7,18 @@ from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Title, Genre, User, Comment, Review
 
 
+def validate_username(value):
+    if (('username' in value and not re.compile(
+            r'[\w.@+-]+$').match(value['username']))
+            or ('username' in value and value['username'].lower() == 'me')):
+        raise serializers.ValidationError('Недопустимое имя пользователя!')
+
+
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
+        model = User
+        validators = [validate_username]
         fields = (
             'username',
             'first_name',
@@ -40,16 +50,15 @@ class GetTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 
-                  'confirmation_code')
+        fields = ('username', 'confirmation_code')
 
 
 class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 
-                  'username')
+        validators = [validate_username]
+        fields = ('email', 'username')
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -158,6 +167,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
 
+
     class Meta:
         validators = [
             UniqueTogetherValidator(
@@ -168,3 +178,4 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         model = Review
         fields = '__all__'
+
