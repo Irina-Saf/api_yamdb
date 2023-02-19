@@ -30,7 +30,7 @@ class GenreAdmin(admin.ModelAdmin):
         "pk",
         "name",
         "slug",
-        
+
     )
 
     empty_value_display = "-пусто-"
