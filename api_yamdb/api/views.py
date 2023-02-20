@@ -9,7 +9,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import filters
 from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Category, Title, Genre, User, Review, Comment
@@ -21,6 +20,7 @@ from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
                           IsAdminOrReadOnly)
 from .serializers import (GetTokenSerializer, SignUpSerializer,
                           UserSerializer)
+from .mixins import CreateListDestroyViewSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -124,23 +124,36 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
+# class CategoryViewSet(viewsets.ModelViewSet):
+#     serializer_class = CategorySerializer
+#     permission_classes = (IsAdminOrReadOnly,)
+#     queryset = Category.objects.all()
+#     pagination_class = LimitOffsetPagination
+#     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+#     search_fields = ('name',)
+
+
+# class GenreViewSet(viewsets.ModelViewSet):
+#     serializer_class = GenreSerializer
+#     permission_classes = (IsAdminOrReadOnly,)
+#     queryset = Genre.objects.all()
+#     pagination_class = LimitOffsetPagination
+#     lookup_field = 'slug'
+#     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+#     search_fields = ('name',)
+
+class CategoryViewSet(CreateListDestroyViewSet):
+
     queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('name',)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
-    serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+class GenreViewSet(CreateListDestroyViewSet):
+
     queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
-    lookup_field = 'slug'
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('name',)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
