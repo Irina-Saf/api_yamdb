@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+import uuid
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
@@ -84,10 +85,11 @@ class Signup(APIView):
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')
+        confirmation_code = str(uuid.uuid4())
         data = {
             'email_body': (
                 f'Приветствуем вас, {username}.'
-                f'\nВаш код подверждения : {{confirmation_code}}'
+                f'\nВаш код подверждения : {confirmation_code}'
             ),
             'to_email': email,
             'email_subject': 'Ваш код подверждения'
@@ -143,6 +145,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
+    permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
     serializer_class = ReviewSerializer
 
     def get_queryset(self):
