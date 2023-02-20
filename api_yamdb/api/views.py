@@ -1,9 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
-# from django.contrib.auth.tokens import default_token_generator
-# from django.core.mail import send_mail
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
@@ -14,19 +12,20 @@ from rest_framework import filters
 from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Category, Title, Genre, User, Review, Comment
+from .serializers import (TitleSerializer, GenreSerializer, CategorySerializer,
+                          CommentSerializer, ReviewSerializer)
 from .filters import TitleFilter
 
 from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
                           IsAdminOrReadOnly)
-from .serializers import (GetTokenSerializer, SignUpSerializer, UserSerializer,
-                          TitleSerializer, GenreSerializer, CategorySerializer,
-                          CommentSerializer, ReviewSerializer)
+from .serializers import (GetTokenSerializer, SignUpSerializer,
+                          UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated, IsAdmin,)
+    permission_classes = (IsAdmin,)
     lookup_field = 'username'
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
@@ -54,38 +53,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class Signup(APIView):
-    permission_classes = (permissions.AllowAny,)
-
-    @staticmethod
-    def send_email(data):
-        email = EmailMessage(
-            subject=data['email_subject'],
-            body=data['email_body'],
-            to=[data['to_email']]
-        )
-        email.send()
-
-    def post(self, request):
-        serializer = SignUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        email_body = (
-            f'Приветствуем вас, {user.username}.'
-            f'\nКВаш код подверждения : {user.confirmation_code}'
-        )
-        data = {
-            'email_body': email_body,
-            'to_email': user.email,
-            'email_subject': 'Ваш код подверждения!'
-        }
-        if serializer.is_valid():
-            serializer.save()
-            self.send_email(data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class GetToken(APIView):
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
@@ -104,29 +71,71 @@ class GetToken(APIView):
         )
 
 
+class Signup(APIView):
+    @staticmethod
+    def send_email(data):
+        email = EmailMessage(
+            subject=data['email_subject'],
+            body=data['email_body'],
+            to=[data['to_email']]
+        )
+        email.send()
+
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        data = {
+            'email_body': (
+                f'Приветствуем вас, {username}.'
+                f'\nВаш код подверждения : {{confirmation_code}}'
+            ),
+            'to_email': email,
+            'email_subject': 'Ваш код подверждения'
+        }
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            user = None
+        if user:
+            if user.email != email:
+                return Response(
+                    {'error': ('Несоответствие Email адреса.')},
+                    status=status.HTTP_400_BAD_REQUEST)
+            serializer = SignUpSerializer(user, data=request.data)
+        else:
+            serializer = SignUpSerializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        data['email_body'] = data['email_body'].format(
+            confirmation_code=user.confirmation_code)
+        self.send_email(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
+    permission_classes = (IsAdminOrReadOnly,)
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
     queryset = Category.objects.all()
     pagination_class = LimitOffsetPagination
-    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrReadOnly,)
     queryset = Genre.objects.all()
     pagination_class = LimitOffsetPagination
-    permission_classes = (IsAdminOrReadOnly,)
     lookup_field = 'slug'
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
