@@ -17,26 +17,30 @@ class User(AbstractUser):
 
     username = models.CharField(
         'Имя пользователя',
-        max_length=50,
+        max_length=150,
         unique=True,
+        blank=False,
+        null=False
     )
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(
         'Почта',
-        max_length=150,
+        max_length=254,
         unique=True,
+        blank=False,
+        null=False
     )
     role = models.CharField(
         'Роль пользователя',
         choices=ROLES,
         default=USER,
-        max_length=50,
+        max_length=20,
     )
     bio = models.TextField('Биография', blank=True)
     confirmation_code = models.CharField(
         'Код авторизации',
-        max_length=50,
+        max_length=255,
         blank=True,
         null=True,
     )

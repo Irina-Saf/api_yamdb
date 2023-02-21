@@ -8,7 +8,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Category, Title, Genre, User, Review, Comment
@@ -19,17 +19,18 @@ from .filters import TitleFilter
 from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
                           IsAdminOrReadOnly)
 from .serializers import (GetTokenSerializer, SignUpSerializer,
-                          UserSerializer)
+                          UserSerializer, NotAdminSerializer)
 from .mixins import CreateListDestroyViewSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAdmin,)
+    permission_classes = (IsAuthenticated, IsAdmin,)
     lookup_field = 'username'
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
+    http_method_names = ['post', 'get', 'patch', 'delete']
 
     @action(
         methods=['GET', 'PATCH'],
@@ -42,15 +43,21 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             serializer = UserSerializer(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == "PATCH":
+        if request.method == 'PATCH':
             serializer = UserSerializer(
                 request.user,
                 data=request.data,
                 partial=True
             )
+
             serializer.is_valid(raise_exception=True)
             serializer.save(role=request.user.role)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            serializer = NotAdminSerializer(
+                request.user,
+                data=request.data,
+                partial=True)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -59,17 +66,19 @@ class GetToken(APIView):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        user = get_object_or_404(User, username=request.data['username'])
-        if data['confirmation_code'] == user.confirmation_code:
-            refresh = RefreshToken.for_user(user).access_token
+        try:
+            user = User.objects.get(username=data['username'])
+        except User.DoesNotExist:
             return Response(
-                {'token': str(refresh)},
-                status=status.HTTP_200_OK
-            )
+                {'username': 'Пользователь не найден!'},
+                status=status.HTTP_404_NOT_FOUND)
+        if data.get('confirmation_code') == user.confirmation_code:
+            token = AccessToken.for_user(user)
+            return Response({'token': str(token)},
+                            status=status.HTTP_201_CREATED)
         return Response(
-            {'confirmation_code': 'Неверный код'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            {'confirmation_code': 'Неверный код подтверждения!'},
+            status=status.HTTP_400_BAD_REQUEST)
 
 
 class Signup(APIView):
