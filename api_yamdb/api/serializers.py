@@ -136,6 +136,11 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
+    # name = serializers.CharField(
+    #     max_length=256,
+    #     required=True,
+    #     allow_null=False,
+    # )
 
     class Meta:
         model = Title
