@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.core.validators import MinValueValidator, MaxValueValidator
+from .validators import validate_year
 
 
 class User(AbstractUser):
@@ -17,26 +18,30 @@ class User(AbstractUser):
 
     username = models.CharField(
         'Имя пользователя',
-        max_length=50,
+        max_length=150,
         unique=True,
+        blank=False,
+        null=False
     )
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(
         'Почта',
-        max_length=150,
+        max_length=254,
         unique=True,
+        blank=False,
+        null=False
     )
     role = models.CharField(
         'Роль пользователя',
         choices=ROLES,
         default=USER,
-        max_length=50,
+        max_length=20,
     )
     bio = models.TextField('Биография', blank=True)
     confirmation_code = models.CharField(
         'Код авторизации',
-        max_length=50,
+        max_length=255,
         blank=True,
         null=True,
     )
@@ -113,10 +118,13 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(
-        max_length=200,
+        max_length=256,
         verbose_name='Произведение'
     )
-    year = models.IntegerField(verbose_name='Год выпуска произведения')
+    year = models.IntegerField(
+        validators=(validate_year,),
+        verbose_name='Год выпуска произведения')
+
     rating = models.IntegerField(verbose_name='Рейтинг произведения')
     description = models.TextField(
         max_length=200,
@@ -146,9 +154,9 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class GenreTitle(models.Model):
-    
 
     genre = models.ForeignKey(
         Genre,

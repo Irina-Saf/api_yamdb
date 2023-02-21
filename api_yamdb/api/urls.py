@@ -16,8 +16,8 @@ router.register(r'titles/(?P<title_id>\d+)/reviews/'
 
 
 api_users_pattern = [
-    path('auth/token/', GetToken.as_view(), name='get_token'),
-    path('auth/signup/', Signup.as_view(), name='signup'),
+    path('auth/token/', GetToken.as_view()),
+    path('auth/signup/', Signup.as_view()),
 ]
 urlpatterns = [
     path('v1/', include(router.urls)),
