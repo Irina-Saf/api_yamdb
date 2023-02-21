@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 import uuid
+# from django.db.models import Avg
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
@@ -19,7 +20,7 @@ from .filters import TitleFilter
 from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
                           IsAdminOrReadOnly)
 from .serializers import (GetTokenSerializer, SignUpSerializer,
-                          UserSerializer, NotAdminSerializer)
+                          UserSerializer, NotAdminSerializer, TitleCreateSerializer)
 from .mixins import CreateListDestroyViewSet
 
 
@@ -125,6 +126,7 @@ class Signup(APIView):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+
     queryset = Title.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
     serializer_class = TitleSerializer
@@ -132,24 +134,18 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
+    # queryset = Title.objects.all().annotate(
+    #     rating=Avg('reviews__score')).order_by('-id')
+    # pagination_class = LimitOffsetPagination
+    # permission_classes = [IsAdminOrReadOnly]
+    # filter_backends = [DjangoFilterBackend]
+    # filterset_class = TitleFilter
 
-# class CategoryViewSet(viewsets.ModelViewSet):
-#     serializer_class = CategorySerializer
-#     permission_classes = (IsAdminOrReadOnly,)
-#     queryset = Category.objects.all()
-#     pagination_class = LimitOffsetPagination
-#     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-#     search_fields = ('name',)
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return TitleCreateSerializer
+        return TitleSerializer
 
-
-# class GenreViewSet(viewsets.ModelViewSet):
-#     serializer_class = GenreSerializer
-#     permission_classes = (IsAdminOrReadOnly,)
-#     queryset = Genre.objects.all()
-#     pagination_class = LimitOffsetPagination
-#     lookup_field = 'slug'
-#     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-#     search_fields = ('name',)
 
 class CategoryViewSet(CreateListDestroyViewSet):
 

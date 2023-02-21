@@ -119,18 +119,19 @@ class Genre(models.Model):
 class Title(models.Model):
     name = models.CharField(
         max_length=256,
-        verbose_name='Произведение'
+        verbose_name='Произведение',
+        help_text='Укажите произведение'
     )
     year = models.IntegerField(
         validators=(validate_year,),
-        verbose_name='Год выпуска произведения')
-
-    rating = models.IntegerField(verbose_name='Рейтинг произведения')
+        verbose_name='Год создания',
+        help_text='Укажите год создания произведения'
+    )
     description = models.TextField(
         max_length=200,
         null=True,
         blank=True,
-        verbose_name='Описание произведения'
+        verbose_name='Описание'
     )
     category = models.ForeignKey(
         Category,
@@ -139,12 +140,13 @@ class Title(models.Model):
         blank=True,
         null=True,
         related_name='titles',
+        help_text='Укажите категорию',
         verbose_name='Категория'
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle',
         related_name='titles',
+        help_text='Укажите жанр',
         verbose_name='Жанр'
     )
 
@@ -181,13 +183,13 @@ class Review(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='posts')
+        User, on_delete=models.CASCADE, related_name='reviews')
     score = models.IntegerField(validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviewing'
+        related_name='reviews'
     )
 
     def __str__(self):
@@ -206,3 +208,5 @@ class Comment(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
+    # pub_date = models.DateTimeField(
+    #     'Дата добавления', auto_now_add=True)
