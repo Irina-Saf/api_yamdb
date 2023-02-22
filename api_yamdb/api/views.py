@@ -20,7 +20,8 @@ from .filters import TitleFilter
 from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
                           IsAdminOrReadOnly)
 from .serializers import (GetTokenSerializer, SignUpSerializer,
-                          UserSerializer, NotAdminSerializer, TitleCreateSerializer)
+                          UserSerializer, NotAdminSerializer,
+                          TitleCreateSerializer)
 from .mixins import CreateListDestroyViewSet
 
 
@@ -173,13 +174,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
         new_queryset = Review.objects.filter(title=title_id)
         return new_queryset
 
+    # def perform_create(self, serializer):
+    #     title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+    #     serializer.save(author=self.request.user, review=title)
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, review=title)
+        title = get_object_or_404(
+            Title,
+            id=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
 
-    def perform_update(self, serializer):
-        serializer.save(author=self.request.user)
-        super(ReviewViewSet, self).perform_update(serializer)
+    # def perform_update(self, serializer):
+    #     serializer.save(author=self.request.user)
+    #     super(ReviewViewSet, self).perform_update(serializer)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
