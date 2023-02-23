@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
-from django.core.validators import MinValueValidator, MaxValueValidator
+
 from .validators import validate_year
 
 
@@ -208,5 +209,3 @@ class Comment(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
-    # pub_date = models.DateTimeField(
-    #     'Дата добавления', auto_now_add=True)

@@ -1,10 +1,11 @@
 import re
+
+from django.core.exceptions import ValidationError
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from django.core.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
-from reviews.models import Category, Title, Genre, User, Comment, Review
-from django.db.models import Avg
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 def validate_username(value):

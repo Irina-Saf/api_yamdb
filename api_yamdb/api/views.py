@@ -1,28 +1,27 @@
-from django_filters.rest_framework import DjangoFilterBackend
 import uuid
-# from django.db.models import Avg
+
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import LimitOffsetPagination
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
-from reviews.models import Category, Title, Genre, User, Review, Comment
-from .serializers import (TitleSerializer, GenreSerializer, CategorySerializer,
-                          CommentSerializer, ReviewSerializer)
 from .filters import TitleFilter
-
-from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsAdmin,
-                          IsAdminOrReadOnly)
-from .serializers import (GetTokenSerializer, SignUpSerializer,
-                          UserSerializer, NotAdminSerializer,
-                          TitleCreateSerializer)
 from .mixins import CreateListDestroyViewSet
+from .permissions import (IsAdmin, IsAdminOrReadOnly,
+                          IsAuthorAdminModeratorOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, GetTokenSerializer,
+                          NotAdminSerializer, ReviewSerializer,
+                          SignUpSerializer, TitleCreateSerializer,
+                          TitleSerializer, UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -135,13 +134,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
-    # queryset = Title.objects.all().annotate(
-    #     rating=Avg('reviews__score')).order_by('-id')
-    # pagination_class = LimitOffsetPagination
-    # permission_classes = [IsAdminOrReadOnly]
-    # filter_backends = [DjangoFilterBackend]
-    # filterset_class = TitleFilter
-
     def get_serializer_class(self):
         if self.action in ('create', 'update', 'partial_update'):
             return TitleCreateSerializer
@@ -168,38 +160,25 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
 
     def get_queryset(self):
-        # Получаем id отзыва из эндпоинта
         title_id = self.kwargs.get('title_id')
-        # И отбираем только нужные комментарии
         new_queryset = Review.objects.filter(title=title_id)
         return new_queryset
 
-    # def perform_create(self, serializer):
-    #     title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-    #     serializer.save(author=self.request.user, review=title)
     def perform_create(self, serializer):
         title = get_object_or_404(
             Title,
             id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
 
-    # def perform_update(self, serializer):
-    #     serializer.save(author=self.request.user)
-    #     super(ReviewViewSet, self).perform_update(serializer)
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorAdminModeratorOrReadOnly,)
-    # queryset во вьюсете не указываем
-    # Нам тут нужны не все комментарии,
-    # а только связанные с отзывом id=review_id
-    # Поэтому нужно переопределить метод get_queryset и применить фильтр
 
     def get_queryset(self):
-        # Получаем id отзыва из эндпоинта
+
         review_id = self.kwargs.get('review_id')
-        # И отбираем только нужные комментарии
+
         new_queryset = Comment.objects.filter(review=review_id)
         return new_queryset
 
