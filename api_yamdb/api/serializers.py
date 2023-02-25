@@ -65,13 +65,13 @@ class SignUpSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        exclude = ('id',)
+        fields = ('name', 'slug',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        exclude = ('id',)
+        fields = ('name', 'slug',)
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -86,16 +86,13 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'year',
+                  'description', 'genre', 'category',)
         model = Title
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('id', 'name', 'year',
-                  'description', 'genre', 'category', 'rating'
-                  )
-        model = Title
+
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
     rating = serializers.SerializerMethodField(
@@ -104,6 +101,12 @@ class TitleSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         return obj.reviews.all().aggregate(Avg('score'))['score__avg']
+
+    class Meta:
+        fields = ('id', 'name', 'year',
+                  'description', 'genre', 'category', 'rating'
+                  )
+        model = Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
