@@ -1,37 +1,38 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.db.models import UniqueConstraint
 
 from .validators import validate_year
 
 
-class User(AbstractUser):
-    USER = 'user'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+USER = 'user'
 
-    ROLES = [
-        (MODERATOR, 'Модератор'),
-        (ADMIN, 'Администратор'),
-        (USER, 'Пользователь'),
-    ]
+ROLES = [
+    (ADMIN, ADMIN),
+    (MODERATOR, MODERATOR),
+    (USER, USER),
+]
+
+
+class User(AbstractUser):
 
     username = models.CharField(
         'Имя пользователя',
         max_length=150,
-        unique=True,
-        blank=False,
-        null=False
+        unique=True
     )
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(
         'Почта',
         max_length=254,
-        unique=True,
-        blank=False,
-        null=False
+        unique=True
     )
     role = models.CharField(
         'Роль пользователя',
@@ -44,37 +45,41 @@ class User(AbstractUser):
         'Код авторизации',
         max_length=255,
         blank=True,
-        null=True,
+        default='QWERTY'
     )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'], name='unique_user')
-        ]
-
-    def __str__(self):
-        return self.username
 
     @property
     def is_admin(self):
-        return self.role == 'admin' or self.is_superuser
+        return self.role == ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == MODERATOR
 
     @property
     def is_user(self):
-        return self.role == 'user'
+        return self.role == USER
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=['username', 'email'],
-                name='unique_fields'
+                name='unique_user'
             )
         ]
+
+    def __str__(self):
+        return self.username
+
+
+@receiver(post_save, sender=User)
+def post_save(sender, instance, created, **kwargs):
+    if created:
+        confirmation_code = default_token_generator.make_token(
+            instance
+        )
+        instance.confirmation_code = confirmation_code
+        instance.save()
 
 
 class Category(models.Model):
