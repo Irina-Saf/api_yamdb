@@ -1,5 +1,4 @@
 import uuid
-
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -27,10 +26,10 @@ from .serializers import (CategorySerializer, CommentSerializer,
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated, IsAdmin,)
+    permission_classes = (IsAdmin,)
     lookup_field = 'username'
     filter_backends = (SearchFilter, )
-    search_fields = ('username', )
+    search_fields = ('username',)
     http_method_names = ['post', 'get', 'patch', 'delete']
 
     @action(
@@ -95,15 +94,6 @@ class Signup(APIView):
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')
-        confirmation_code = str(uuid.uuid4())
-        data = {
-            'email_body': (
-                f'Приветствуем вас, {username}.'
-                f'\nВаш код подверждения : {confirmation_code}'
-            ),
-            'to_email': email,
-            'email_subject': 'Ваш код подверждения'
-        }
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -119,6 +109,14 @@ class Signup(APIView):
 
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        data = {
+            'email_body': (
+                f'Приветствуем вас, {username}.'
+                f'\nВаш код подверждения : {user.confirmation_code}'
+            ),
+            'to_email': email,
+            'email_subject': 'Ваш код подтверждения'
+        }
         data['email_body'] = data['email_body'].format(
             confirmation_code=user.confirmation_code)
         self.send_email(data)
@@ -143,6 +141,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(CreateListDestroyViewSet):
 
     queryset = Category.objects.all()
+    permission_classes = (IsAdminOrReadOnly,)
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
 
@@ -150,6 +149,7 @@ class CategoryViewSet(CreateListDestroyViewSet):
 class GenreViewSet(CreateListDestroyViewSet):
 
     queryset = Genre.objects.all()
+    permission_classes = (IsAdminOrReadOnly,)
     serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
 

@@ -19,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        validators = [validate_username]
+        validators = (validate_username,)
         fields = (
             'username',
             'first_name',
@@ -58,7 +58,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        validators = [validate_username]
+        validators = (validate_username,)
         fields = ('email', 'username')
 
 
