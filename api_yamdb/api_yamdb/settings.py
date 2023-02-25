@@ -106,7 +106,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 # УДАЛИТЬ НИЖНЮЮ СТРОКУ!!!!!
-# CSV_FILES_DIR = os.path.join(BASE_DIR, 'static/data')
+CSV_FILES_DIR = os.path.join(BASE_DIR, 'static/data/')
 
 AUTH_USER_MODEL = 'reviews.User'
 
