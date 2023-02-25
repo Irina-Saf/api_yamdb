@@ -19,6 +19,9 @@ ROLES = [
     (USER, USER),
 ]
 
+MINSCOREVALUE = 1
+MAXSCOREVALUE = 10
+
 
 class User(AbstractUser):
 
@@ -198,8 +201,9 @@ class Review(models.Model):
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
-    score = models.IntegerField(validators=(MinValueValidator(1),
-                                            MaxValueValidator(10)))
+    score = models.PositiveSmallIntegerField(validators=(
+                                             MinValueValidator(MINSCOREVALUE),
+                                             MaxValueValidator(MAXSCOREVALUE)))
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -210,6 +214,8 @@ class Review(models.Model):
         return self.text
 
     class Meta:
+        verbose_name = 'Отзывы на произведения'
+        ordering = ('title',)
         constraints = [UniqueConstraint(fields=['author', 'title'],
                        name='unique_rating')]
 
@@ -222,3 +228,10 @@ class Comment(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return f'Комментарий {self.text} к отзыву {self.review}'
+
+    class Meta:
+        verbose_name = 'Комментарии к отзывам'
+        ordering = ('review',)
