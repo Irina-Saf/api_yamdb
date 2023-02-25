@@ -24,7 +24,7 @@ class TitleAdmin(admin.ModelAdmin):
         'category',
         # 'genre'
     )
-    search_fields = ('name',)    
+    search_fields = ('name',)
     empty_value_display = "-пусто-"
 
 
@@ -75,8 +75,8 @@ class CommentAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Category, CategoryAdmin)
-admin.site.register(Title, TitleAdmin)
-admin.site.register(Genre, GenreAdmin)
+# admin.site.register(Category, CategoryAdmin)
+# admin.site.register(Title, TitleAdmin)
+# admin.site.register(Genre, GenreAdmin)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Comment, CommentAdmin)

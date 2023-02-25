@@ -162,7 +162,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        # validators=(validate_genry_null,),
+        validators=(validate_genry_null,),
         related_name='titles',
         help_text='Укажите жанр',
         verbose_name='Жанр'
