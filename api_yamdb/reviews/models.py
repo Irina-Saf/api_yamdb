@@ -19,30 +19,41 @@ ROLES = [
     (USER, USER),
 ]
 
+MINSCOREVALUE = 1
+MAXSCOREVALUE = 10
+
 
 class User(AbstractUser):
 
     username = models.CharField(
-        'Имя пользователя',
+        verbose_name='Имя пользователя',
         max_length=150,
         unique=True
     )
-    first_name = models.CharField(max_length=50, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
+    first_name = models.CharField(
+        verbose_name='Имя',
+        max_length=50,
+        blank=True
+    )
+    last_name = models.CharField(
+        verbose_name='Фамилия',
+        max_length=150,
+        blank=True
+    )
     email = models.EmailField(
-        'Почта',
+        verbose_name='Email пользователя',
         max_length=254,
         unique=True
     )
     role = models.CharField(
-        'Роль пользователя',
+        verbose_name='Роль пользователя',
         choices=ROLES,
         default=USER,
         max_length=20,
     )
-    bio = models.TextField('Биография', blank=True)
+    bio = models.TextField(verbose_name='Биография', blank=True)
     confirmation_code = models.CharField(
-        'Код авторизации',
+        verbose_name='Код авторизации',
         max_length=255,
         blank=True,
         default='QWERTY'
@@ -191,8 +202,9 @@ class Review(models.Model):
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
-    score = models.IntegerField(validators=(MinValueValidator(1),
-                                            MaxValueValidator(10)))
+    score = models.PositiveSmallIntegerField(validators=(
+                                             MinValueValidator(MINSCOREVALUE),
+                                             MaxValueValidator(MAXSCOREVALUE)))
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -203,6 +215,8 @@ class Review(models.Model):
         return self.text
 
     class Meta:
+        verbose_name = 'Отзывы на произведения'
+        ordering = ('title',)
         constraints = [UniqueConstraint(fields=['author', 'title'],
                        name='unique_rating')]
 
@@ -215,3 +229,10 @@ class Comment(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return f'Комментарий {self.text} к отзыву {self.review}'
+
+    class Meta:
+        verbose_name = 'Комментарии к отзывам'
+        ordering = ('review',)

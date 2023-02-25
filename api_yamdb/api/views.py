@@ -106,12 +106,25 @@ class Signup(APIView):
         else:
             serializer = SignUpSerializer(data=request.data)
 
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            user = None
+        if user:
+            if user.username != username:
+                return Response(
+                    {'error': ('Попробуйте другой username.')},
+                    status=status.HTTP_400_BAD_REQUEST)
+            serializer = SignUpSerializer(user, data=request.data)
+        else:
+            serializer = SignUpSerializer(data=request.data)
+            
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         data = {
             'email_body': (
                 f'Приветствуем вас, {username}.'
-                f'\nВаш код подверждения : {user.confirmation_code}'
+                f'\nВаш код подтверждения : {user.confirmation_code}'
             ),
             'to_email': email,
             'email_subject': 'Ваш код подтверждения'
