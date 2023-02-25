@@ -5,6 +5,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -19,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        validators = [validate_username]
+        validators = (validate_username,)
         fields = (
             'username',
             'first_name',
@@ -58,44 +59,43 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        validators = [validate_username]
+        validators = (validate_username,)
         fields = ('email', 'username')
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        exclude = ('id',)
+        fields = ('name', 'slug',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        exclude = ('id',)
+        fields = ('name', 'slug',)
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
+
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
-        slug_field='slug'
+        slug_field='slug',
     )
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
-        many=True
+        many=True,
+        required=True
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'year',
+                  'description', 'genre', 'category',)
         model = Title
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('id', 'name', 'year',
-                  'description', 'genre', 'category', 'rating'
-                  )
-        model = Title
+
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
     rating = serializers.SerializerMethodField(
@@ -104,6 +104,12 @@ class TitleSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         return obj.reviews.all().aggregate(Avg('score'))['score__avg']
+
+    class Meta:
+        fields = ('id', 'name', 'year',
+                  'description', 'genre', 'category', 'rating'
+                  )
+        model = Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -131,15 +137,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
     class Meta:
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Review.objects.all(),
-        #         fields=['title', 'author', 'score'],
-        #         message='Оценить можно только один раз!'
-        #     )
-        # ]
         model = Review
-        fields = '__all__'
+        fields = ('id', 'title', 'author', 'pub_date', 'score', 'text')
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -148,6 +147,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'author', 'review', 'text',
+                  'pub_date')
         model = Comment
         read_only_fields = ('author', 'review')

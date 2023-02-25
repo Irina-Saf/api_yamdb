@@ -5,10 +5,10 @@ from .views import (CategoryViewSet, CommentViewSet, GenreViewSet, GetToken,
                     ReviewViewSet, Signup, TitleViewSet, UserViewSet)
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='users')
-router.register(r'categories', CategoryViewSet, basename='category')
-router.register(r'genres', GenreViewSet, basename='genre')
-router.register(r'titles', TitleViewSet, basename='title')
+router.register('users', UserViewSet, basename='users')
+router.register('categories', CategoryViewSet, basename='category')
+router.register('genres', GenreViewSet, basename='genre')
+router.register('titles', TitleViewSet, basename='title')
 router.register(r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet)
 router.register(r'titles/(?P<title_id>\d+)/reviews/'
                 r'(?P<review_id>\d+)/comments',
@@ -22,8 +22,4 @@ api_users_pattern = [
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/', include(api_users_pattern)),
-    # path('auth/', include('djoser.urls')),
-    # # JWT-эндпоинты, для управления JWT-токенами:
-    # path('auth/', include('djoser.urls.jwt')),
-
 ]

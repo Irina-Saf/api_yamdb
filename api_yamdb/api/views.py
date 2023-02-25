@@ -1,5 +1,3 @@
-import uuid
-
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,7 +9,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Comment, Genre, Review, Title, User
 
 from .filters import TitleFilter
 from .mixins import CreateListDestroyViewSet
@@ -22,15 +19,16 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           NotAdminSerializer, ReviewSerializer,
                           SignUpSerializer, TitleCreateSerializer,
                           TitleSerializer, UserSerializer)
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticated, IsAdmin,)
+    permission_classes = (IsAdmin,)
     lookup_field = 'username'
     filter_backends = (SearchFilter, )
-    search_fields = ('username', )
+    search_fields = ('username',)
     http_method_names = ['post', 'get', 'patch', 'delete']
 
     @action(
@@ -95,15 +93,6 @@ class Signup(APIView):
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')
-        confirmation_code = str(uuid.uuid4())
-        data = {
-            'email_body': (
-                f'Приветствуем вас, {username}.'
-                f'\nВаш код подверждения : {confirmation_code}'
-            ),
-            'to_email': email,
-            'email_subject': 'Ваш код подверждения'
-        }
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -117,8 +106,29 @@ class Signup(APIView):
         else:
             serializer = SignUpSerializer(data=request.data)
 
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            user = None
+        if user:
+            if user.username != username:
+                return Response(
+                    {'error': ('Попробуйте другой username.')},
+                    status=status.HTTP_400_BAD_REQUEST)
+            serializer = SignUpSerializer(user, data=request.data)
+        else:
+            serializer = SignUpSerializer(data=request.data)
+            
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        data = {
+            'email_body': (
+                f'Приветствуем вас, {username}.'
+                f'\nВаш код подтверждения : {user.confirmation_code}'
+            ),
+            'to_email': email,
+            'email_subject': 'Ваш код подтверждения'
+        }
         data['email_body'] = data['email_body'].format(
             confirmation_code=user.confirmation_code)
         self.send_email(data)
@@ -143,6 +153,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(CreateListDestroyViewSet):
 
     queryset = Category.objects.all()
+    permission_classes = (IsAdminOrReadOnly,)
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
 
@@ -150,6 +161,7 @@ class CategoryViewSet(CreateListDestroyViewSet):
 class GenreViewSet(CreateListDestroyViewSet):
 
     queryset = Genre.objects.all()
+    permission_classes = (IsAdminOrReadOnly,)
     serializer_class = GenreSerializer
     pagination_class = LimitOffsetPagination
 
