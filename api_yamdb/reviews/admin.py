@@ -14,15 +14,16 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 class TitleAdmin(admin.ModelAdmin):
-    list_display = [
+    list_display = (
         'pk',
         'name',
         'year',
         'description',
         'category',
         # 'genre'
-
-    ]
+    )
+    search_fields = ('name',)
+    empty_value_display = "-пусто-"
 
 
 class GenreAdmin(admin.ModelAdmin):
@@ -30,9 +31,8 @@ class GenreAdmin(admin.ModelAdmin):
         "pk",
         "name",
         "slug",
-
     )
-
+    search_fields = ('name',)
     empty_value_display = "-пусто-"
 
 
@@ -55,8 +55,3 @@ class UserAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Title, TitleAdmin)
 admin.site.register(Genre, GenreAdmin)
-admin.site.register(User, UserAdmin)
-
-
-
-

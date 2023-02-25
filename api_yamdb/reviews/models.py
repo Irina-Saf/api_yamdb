@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import UniqueConstraint
 
-from .validators import validate_year
+from .validators import validate_year, validate_genry_null
 
 
 ADMIN = 'admin'
@@ -85,6 +85,7 @@ def post_save(sender, instance, created, **kwargs):
 class Category(models.Model):
     name = models.TextField(
         max_length=256,
+        unique=True,
         verbose_name='Категория',
     )
     slug = models.SlugField(
@@ -128,14 +129,13 @@ class Title(models.Model):
         verbose_name='Произведение',
         help_text='Укажите произведение'
     )
-    year = models.IntegerField(
+    year = models.PositiveSmallIntegerField(
         validators=(validate_year,),
         verbose_name='Год создания',
         help_text='Укажите год создания произведения'
     )
     description = models.TextField(
         max_length=200,
-        null=True,
         blank=True,
         verbose_name='Описание'
     )
@@ -151,6 +151,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
+        # validators=(validate_genry_null,),
         related_name='titles',
         help_text='Укажите жанр',
         verbose_name='Жанр'
