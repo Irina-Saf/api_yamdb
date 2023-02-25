@@ -118,7 +118,7 @@ class Signup(APIView):
             serializer = SignUpSerializer(user, data=request.data)
         else:
             serializer = SignUpSerializer(data=request.data)
-            
+
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         data = {

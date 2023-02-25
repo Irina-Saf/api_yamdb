@@ -38,14 +38,15 @@ class Command(BaseCommand):
 
 
 def load_csv(name_file, class_obj):
-    with open(CSV_FILES_DIR + name_file + '.csv', encoding='utf-8') as csv_file:
+    with open(CSV_FILES_DIR + name_file + '.csv',
+              encoding='utf-8') as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=',')
         for row in csv_reader:
             valid_row = chek_keys(row)
             new_obj = class_obj(**valid_row)
             new_obj.save()
-        print(
-            f'Загружен файл [{name_file}], записей добавлено [{csv_reader.line_num-1}]')
+        print(f'Загружен файл [{name_file}],'
+              f'записей добавлено [{csv_reader.line_num-1}]')
 
 
 def chek_keys(data_csv):
