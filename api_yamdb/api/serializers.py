@@ -13,7 +13,9 @@ def validate_username(value):
     if (('username' in value and not re.compile(
             r'[\w.@+-]+$').match(value['username']))
             or ('username' in value and value['username'].lower() == 'me')):
-        raise serializers.ValidationError('Недопустимое имя пользователя!')
+        raise serializers.ValidationError(
+            {'error': ('Попробуйте другой username.')}
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):

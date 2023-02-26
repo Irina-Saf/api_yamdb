@@ -74,7 +74,7 @@ class GetToken(APIView):
         if data.get('confirmation_code') == user.confirmation_code:
             token = AccessToken.for_user(user)
             return Response({'token': str(token)},
-                            status=status.HTTP_201_CREATED)
+                            status=status.HTTP_200_OK)
         return Response(
             {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST)
@@ -100,7 +100,7 @@ class Signup(APIView):
         if user:
             if user.email != email:
                 return Response(
-                    {'error': ('Несоответствие Email адреса.')},
+                    {'error': ('Попробуйте другой username.')},
                     status=status.HTTP_400_BAD_REQUEST)
             serializer = SignUpSerializer(user, data=request.data)
         else:
@@ -113,7 +113,7 @@ class Signup(APIView):
         if user:
             if user.username != username:
                 return Response(
-                    {'error': ('Попробуйте другой username.')},
+                    {'error': ('Несоответствие Email адреса.')},
                     status=status.HTTP_400_BAD_REQUEST)
             serializer = SignUpSerializer(user, data=request.data)
         else:
