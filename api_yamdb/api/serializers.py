@@ -2,11 +2,11 @@ import re
 
 from django.core.exceptions import ValidationError
 from django.db.models import Avg
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import (Category, Comment, Genre, Review, Title, User,
+                            MAXSCOREVALUE, MINSCOREVALUE)
 
 
 def validate_username(value):
@@ -97,7 +97,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(read_only=True, many=True)
+    genre = GenreSerializer(read_only=False, many=True, required=True)
     rating = serializers.SerializerMethodField(
         required=False
     )
@@ -120,7 +120,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
 
     def validate_score(self, value):
-        if 0 > value > 10:
+        if MINSCOREVALUE > value > MAXSCOREVALUE:
             raise serializers.ValidationError('Оценка по 10-бальной шкале!')
         return value
 
@@ -128,10 +128,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context['request']
         author = request.user
         title_id = self.context.get('view').kwargs.get('title_id')
-        title = get_object_or_404(Title, pk=title_id)
         if (
             request.method == 'POST'
-            and Review.objects.filter(title=title, author=author).exists()
+            and Review.objects.filter(
+                title=title_id, author=author).exists()
         ):
             raise ValidationError('Может существовать только один отзыв!')
         return data
@@ -150,4 +150,4 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'review', 'text',
                   'pub_date')
         model = Comment
-        read_only_fields = ('author', 'review')
+        read_only_fields = ('review',)
