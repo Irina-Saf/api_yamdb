@@ -8,7 +8,6 @@ from django.db.models import UniqueConstraint
 
 from .validators import validate_year, validate_genry_null
 
-
 ADMIN = 'admin'
 MODERATOR = 'moderator'
 USER = 'user'
@@ -162,7 +161,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        validators=(validate_genry_null,),
+        # validators=(validate_genry_null,),
         related_name='titles',
         help_text='Укажите жанр',
         verbose_name='Жанр'
@@ -175,11 +174,38 @@ class Title(models.Model):
     def __str__(self):
         return self.name
 
+    # def clean(self):
+    #     if not self.value:
+    #         raise ValidationError(
+    #             f'{self.genre} Поле пустое')
+
+    # def save(self, *args, **kwargs):
+    #     if not self.genre:
+    #         raise ValueError("Поле пустое")
+    #     super().save(*args, **kwargs)
+
+    # def validate_genry_null(self):
+    #     # if value is None:
+    #     print(f'!!!!!!!!!!!!!!!!!!!!!{self.genre}')
+    #     if not self.genre:
+    #         raise ValidationError(
+    #             f'{self.genre} Поле пустое'
+    #         )
+
+    # def validate_genry_null(value):
+    #     # if value is None:
+    #     print(f'!!!!!!!!!!!!!!!!!!!!!{value}')
+    #     if not value:
+    #         raise ValidationError(
+    #             f'{value} Поле пустое'
+    #         )
+
 
 class GenreTitle(models.Model):
 
     genre = models.ForeignKey(
         Genre,
+        validators=(validate_genry_null,),
         on_delete=models.CASCADE,
         verbose_name='Жанр'
     )
