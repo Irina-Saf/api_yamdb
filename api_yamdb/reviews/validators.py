@@ -7,12 +7,3 @@ def validate_year(value):
         raise ValidationError(
             f'{value} введите корректно год'
         )
-
-
-def validate_genry_null(value):
-    # if value is None:
-    print(f'!!!!!!!!!!!!!!!!!!!!!{value}')
-    if not value:
-        raise ValidationError(
-            f'{value} Поле пустое'
-        )
