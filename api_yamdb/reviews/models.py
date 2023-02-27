@@ -27,7 +27,8 @@ class User(AbstractUser):
 
     username = models.CharField(
         verbose_name='Имя пользователя',
-        max_length=150, # По ТЗ не более 150 символов
+        max_length=150,
+        # По ТЗ не более 150 символов
         unique=True
     )
     first_name = models.CharField(
