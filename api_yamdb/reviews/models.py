@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import UniqueConstraint
 
-from .validators import validate_year, validate_genry_null
+from .validators import validate_year
 
 ADMIN = 'admin'
 MODERATOR = 'moderator'
@@ -161,7 +161,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        # validators=(validate_genry_null,),
         related_name='titles',
         help_text='Укажите жанр',
         verbose_name='Жанр'
@@ -205,7 +204,6 @@ class GenreTitle(models.Model):
 
     genre = models.ForeignKey(
         Genre,
-        validators=(validate_genry_null,),
         on_delete=models.CASCADE,
         verbose_name='Жанр'
     )
